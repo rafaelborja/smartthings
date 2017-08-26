@@ -1,5 +1,6 @@
 /**
- *  Blink Light
+ *  Blink Color Lights
+ *  Simple Smarthings app to blink RGB lights keeping lights's state.
  *
  *  Copyright 2017 Rafael Borja
  *
@@ -17,7 +18,7 @@ definition(
     name: "Blink Light",
     namespace: "rafaelborja",
     author: "Rafael Borja",
-    description: "Blink Light",
+    description: "Blink RGB Lights",
     category: "My Apps",
     iconUrl: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience.png",
     iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience@2x.png",
@@ -25,14 +26,11 @@ definition(
 
 
 preferences {
-	section("Title") {
-		// TODO: put inputs here
-	}
-    section("Turn on when motion detected:") {
-        input "themotion", "capability.button", required: true, title: "Where?"
+    section("Event trigger") {
+        input "button", "capability.button", required: true, title: "Which Devices?"
     }
-    section("Turn on this light") {
-        input "switches", "capability.switch", required: true, multiple: true
+    section("Blink folllwing lights") {
+        input "lights", "capability.switch", required: true, multiple: true, title: "Which Lights?"
     }
 }
 
@@ -51,22 +49,17 @@ def updated() {
 
 def initialize() {
 	// TODO: subscribe to attributes, devices, locations, etc.
-    subscribe(themotion, "button.pushed", motionDetectedHandler)
+    subscribe(button, "button.pushed", eventHandler)
 }
 
-// TODO: implement event handlers
 
-def motionDetectedHandler(evt) {
-    log.debug "motionDetectedHandler called: $evt"
+def eventHandler(evt) {
+    log.debug "eventHandler called: $evt"
     
-
     flashLights()
     
-    switches.on()
-    
-    
  /*   switch: off
-le/vel: 0
+level: 0
 hue: 14
 saturation: 100
 color: #0EC5FF
@@ -76,8 +69,6 @@ colorMode: Color
 colorName: Gold
 switchColor: off
     */
-    
-
 }
 
 private flashLights() {
@@ -85,6 +76,7 @@ private flashLights() {
 	def onFor = onFor ?: 1000
 	def offFor = offFor ?: 1000
 	def numFlashes = numFlashes ?: 3
+
 
 	log.debug "LAST ACTIVATED IS: ${state.lastActivated}"
 	if (state.lastActivated) {
@@ -98,7 +90,7 @@ private flashLights() {
 		log.debug "FLASHING $numFlashes times"
 		state.lastActivated = now()
 		log.debug "LAST ACTIVATED SET TO: ${state.lastActivated}"
-		def initialActionOn = switches.collect{it.currentSwitch != "on"}
+		def initialActionOn = lights.collect{it.currentSwitch != "on"}
 		def delay = 0L
 		numFlashes.times {
 			log.trace "Switch on after  $delay msec"
@@ -118,6 +110,7 @@ private flashLights() {
 				}
 				else {
 					s.on(delay:delay)
+                    s.level(100)
 				}
 			}
 			delay += offFor
