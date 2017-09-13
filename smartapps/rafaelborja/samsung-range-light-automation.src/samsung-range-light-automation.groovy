@@ -25,7 +25,7 @@ definition(
 
 preferences {
     section("Select your range") {
-        input "therange", "capability.operationStateCooktop", required: true
+        input "therange", "capability.setOperationReady", required: true
     }
     section("Turn on the following lights light") {
         input "theswitch", "capability.switch", required: true
