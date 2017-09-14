@@ -25,7 +25,7 @@ definition(
 
 preferences {
     section("Select your range") {
-        input "therange", "capability.setOperationReady", required: true
+        input "therange", "capability.refresh", required: true
     }
     section("Turn on the following lights light") {
         input "theswitch", "capability.switch", required: true
@@ -49,10 +49,12 @@ def updated() {
 	myRangeCaps.each {cap ->
     	log.debug "Capability name: ${cap.name}"
         cap.attributes.each {attr ->
-        	log.debug "-- Attribute name; ${attr.name}"
+        	log.debug "-- Attribute atr name; ${attr.name}"
+        //    log.debug "-- Attribute atr value; ${attr.value}"
         }
         cap.commands.each {comm ->
         	log.debug "-- Command name: ${comm.name}"
+           // log.debug "-- Command value: ${comm.value}"
         }
     }
      
@@ -75,8 +77,10 @@ def updated() {
 }
 
 def initialize() {
+
 	// TODO: subscribe to attributes, devices, locations, etc.
-    subscribe(therange, "operationStateCooktop.Run", cooktopDetectedHandler)
+    subscribe(therange, "operationStateCooktop", cooktopDetectedHandler)
+    subscribe(therange, "operationStateCooktop.Ready", cooktopDetectedHandler)
     
     def rangeCommands = therange.supportedCommands
 	log.debug "therange: $rangeCommands"
@@ -93,7 +97,19 @@ def initialize() {
 
 def cooktopDetectedHandler (evt) {
     log.debug "cooktopDetectedHandler called: $evt"
+    if (evt) {
+        log.debug "cooktopDetectedHandler $evt.name"
+        log.debug "cooktopDetectedHandler $evt.value"
+        
+        if (evt.value == "Run") {
+        	theswitch.on()
+        } else {
+        	theswitch.off()
+        }
+    } 
+    
+    
 
 	// TODO: implement event handlers
-	theswitch.on()
+	// theswitch.on()
 }
