@@ -30,6 +30,9 @@ preferences {
     section("Turn on the following lights light") {
         input "theswitch", "capability.switch", required: true
     }
+    section("Delay before turning off lights") {                    
+		input "delaySecs", "number", title: "Seconds after turning off cooktop?"
+	}
 }
 
 def installed() {
@@ -104,12 +107,23 @@ def cooktopDetectedHandler (evt) {
         if (evt.value == "Run") {
         	theswitch.on()
         } else {
-        	theswitch.off()
+        	// theswitch.off()
+			runIn(delaySecs, scheduleCheck, [overwrite: false])
         }
     } 
-    
-    
+}
 
-	// TODO: implement event handlers
-	// theswitch.on()
+/**
+ * Checks state of range after a certain delay
+ * (adapted from naissan : Lights Off with No Motion and Presence app)
+ */
+def scheduleCheck() {
+	log.debug "Scheduled check"
+	def rangeState = therange.currentState("operationStateCooktop")
+    if (rangeState.value != "Run") {
+    	log.debug "Turning switch off"
+    	theswitch.off()
+    } else {
+    	log.debug "Range is active: do nothing"
+    }
 }
