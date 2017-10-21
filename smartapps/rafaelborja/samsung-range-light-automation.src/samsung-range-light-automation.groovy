@@ -1,7 +1,4 @@
 /**
- *  Range Lights/Fan automation based on Samsung connected ranges event triggers.
- *
- *  Copyright 2017 Rafael Borja
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -12,20 +9,27 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ *  Range Lights/Fan automation based on Samsung connected ranges event triggers.
+ *  https://github.com/rafaelborja/smartthings
+ *
+ *  Copyright 2017 Rafael Borja
  */
 definition(
     name: "Samsung Range Light Automation",
     namespace: "rafaelborja",
     author: "Rafael Borja",
-    description: "Lights automation based on Samsung range events",
+    description: """
+    Lights automation app based on Samsung connected Range events.
+    https://github.com/rafaelborja/smartthings
+    """,
     category: "Convenience",
-    iconUrl: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience.png",
+    iconUrl: "http://cdn.device-icons.smartthings.com/Appliances/appliances4-icn@2x.png",
     iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience@2x.png",
     iconX3Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience@2x.png")
 
 preferences {
     section("Select your range") {
-        input "therange", "capability.refresh", required: true
+        input "therange", "device.SamsungRange", required: true
     }
     section("Turn on the following lights light") {
         input "theswitch", "capability.switch", required: true
@@ -43,57 +47,15 @@ def installed() {
 
 def updated() {
 	log.debug "Updated with settings: ${settings}"
-	
-    // For dev debugin only. Show range capabilities
-    def myRangeCaps = therange.capabilities
-
-	// log each capability supported by the "mySwitch" device, along
-	// with all its supported attributes
-	myRangeCaps.each {cap ->
-    	log.debug "Capability name: ${cap.name}"
-        cap.attributes.each {attr ->
-        	log.debug "-- Attribute atr name; ${attr.name}"
-        //    log.debug "-- Attribute atr value; ${attr.value}"
-        }
-        cap.commands.each {comm ->
-        	log.debug "-- Command name: ${comm.name}"
-           // log.debug "-- Command value: ${comm.value}"
-        }
-    }
-     
-    // For dev debugin only. Show range events
-    def myRangeEvents = therange.events()
-    myRangeCaps.each {event ->
-    	log.debug "Event name: ${event.name}"
-        event.attributes.each {attr ->
-        	log.debug "-- Attribute name; ${attr.name}"
-        }
-	}
-    
-    def rangeCommands = therange.supportedCommands
-    rangeCommands.each {com ->
-    	log.debug "Supported Command: ${com.name}"
-	}
     
 	unsubscribe()
 	initialize()
 }
 
 def initialize() {
-
 	// TODO: subscribe to attributes, devices, locations, etc.
     subscribe(therange, "operationStateCooktop", cooktopDetectedHandler)
     subscribe(therange, "operationStateCooktop.Ready", cooktopDetectedHandler)
-    
-    def rangeCommands = therange.supportedCommands
-	log.debug "therange: $rangeCommands"
-
-	// Iterate through the supported capabilities, log all suported commands:
-	// commands property available via the Capability object
-	def caps = therange.capabilities
-	caps.commands.each {comm ->
-	    log.debug "-- Command name: ${comm.name}"
-	}
 }
 
 // TODO: implement event handlers
@@ -118,9 +80,9 @@ def cooktopDetectedHandler (evt) {
  * (adapted from naissan : Lights Off with No Motion and Presence app)
  */
 def scheduleCheck() {
-	log.debug "Scheduled check"
+	log.debug "Running scheduled check for turning off lights after delay"
 	def rangeState = therange.currentState("operationStateCooktop")
-    if (rangeState.value != "Run") {
+    if (rangeState.value == "Ready") {
     	log.debug "Turning switch off"
     	theswitch.off()
     } else {
